@@ -64,9 +64,8 @@ k = 10;
 [corrMat, instants] = FastCorrelate(Ho_hypo, Ho);
 corrMat(corrMat<0) = 0;
 
-%normalize corrMat: method 1 - make standard deviation = 1. Initially was
-%z-score normalization.
-normcorrMat1 = bsxfun(@rdivide, corrMat, std(corrMat,0,2));
+%normalize corrMat: method 1 - z-score normalization
+normcorrMat1 = mynorm(corrMat);
 
 %normalize corrMat: method 2 - Normalize by standard deviation of sample
 %activation and whole activations of suspect. Discussed in meeting.
