@@ -64,14 +64,14 @@ k = 10;
 [corrMat, instants] = FastCorrelate(Ho_hypo, Ho);
 corrMat(corrMat<0) = 0;
 
-%normalize corrMat: method 1 - z-score normalization
+%normalize corrMat: method 1 :- z-score normalization. Don't use. Weird.
 normcorrMat1 = mynorm(corrMat);
 
-%normalize corrMat: method 2 - Normalize by standard deviation of sample
+%normalize corrMat: method 2 :- Normalize by standard deviation of sample
 %activation and whole activations of suspect. Discussed in meeting.
 normcorrMat2 = bsxfun(@rdivide,corrMat,(std(Ho_hypo,0,2).*std(Ho,0,2)));
 
-%normalize corrMat: method 3 - Normalize by RMS. Discussed in e-mail.
+%normalize corrMat: method 3 :- Normalize by RMS. Discussed in e-mail.
 normcorrMat3 = bsxfun(@rdivide, corrMat, rms(corrMat,2));
 
 correlation_prod1 = prod(normcorrMat1); 
