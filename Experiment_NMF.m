@@ -72,7 +72,7 @@ normcorrMat1 = mynorm(corrMat);
 normcorrMat2 = bsxfun(@rdivide,corrMat,(std(Ho_hypo,0,2).*std(Ho,0,2)));
 
 %normalize corrMat: method 3 :- Normalize by RMS. Discussed in e-mail.
-normcorrMat3 = bsxfun(@rdivide, corrMat, rms(corrMat,2));
+normcorrMat3 = bsxfun(@rdivide, corrMat, (rms(Ho_hypo,2).*rms(Ho,2)));
 
 correlation_prod1 = prod(normcorrMat1); 
 correlation_prod2 = prod(normcorrMat2); 
