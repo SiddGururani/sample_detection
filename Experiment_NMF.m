@@ -66,6 +66,8 @@ k = 10;
 [corrMat, instants] = FastCorrelate(Ho_hypo, Ho);
 corrMat(corrMat<0) = 0;
 
+[corr, corrcoeffs, cosine_similarity] = corr_activations(Ho,Ho_hypo);
+
 %normalize corrMat: method 1 :- z-score normalization. Don't use. Weird.
 normcorrMat1 = mynorm(corrMat);
 

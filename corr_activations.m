@@ -1,4 +1,4 @@
-function [corr, corrcoeffs, cosine_dists] = corr_activations(acti_1, acti_2)
+function [corr, corrcoeffs, cosine_similarity] = corr_activations(acti_1, acti_2)
 
 % acti_1 columns should be smaller than Acti_2 columns
 [nr1, nc1] = size(acti_1);
@@ -23,9 +23,6 @@ corrcoeffs = zeros(1, numel(lags));
 cosine_dists = zeros(nr1, numel(lags));
 corrco = zeros(1,nr1);
 for i = 1:numel(lags)
-    if i == 1358
-        display('hello');
-    end
     corr(:,i) = sum(acti_1.*acti_2(:,i:i+nc1-1),2)./(rms(acti_1,2).*rms(acti_2(:,i:i+nc1-1),2));
     for j = 1: nr1
         temp = corrcoef(acti_1(j,:), acti_2(j,i:i+nc1-1));
@@ -40,10 +37,12 @@ corrcoeffs(1) = [];
 cosine_dists(:,1) = [];
 lags = lags(2:end);
 
+cosine_similarity = 1-cosine_dists;
+
 figure;
 plot(lags,corrcoeffs);
 figure;
 plot(lags,prod(corr));
 figure;
-plot(lags, prod(cosine_dists.^-1));
+plot(lags, prod(cosine_similarity));
 end
