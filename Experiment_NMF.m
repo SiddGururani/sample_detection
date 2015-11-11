@@ -6,6 +6,8 @@ function Experiment_NMF(sample, suspect)
 
 [data_orig,fs] = audioread(sample);
 [data_copy,fs] = audioread(suspect);
+data_orig = bsxfun(@rdivide, data_orig, rms(data_orig,1));
+data_copy = bsxfun(@rdivide, data_copy, rms(data_copy,1));
 
 %% Computing the STFT spectrograms
 
