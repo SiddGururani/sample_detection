@@ -15,20 +15,35 @@ if(nc1 > nc2)
     clear temp;
 end
 
-positions = 0:nc2-nc1+1;
+lags = -nc1:nc2+1;
+acti_2 = [zeros(nr1, nc1), acti_2, zeros(nr1, nc1+1)];
 
-corr = zeros(nr1, numel(positions)-1);
-corrcoeffs = zeros(1, numel(positions)-1);
-cosine_dists = zeros(nr1, numel(positions)-1);
-for i = 1:numel(positions)-1
-    if i == 445
+corr = zeros(nr1, numel(lags));
+corrcoeffs = zeros(1, numel(lags));
+cosine_dists = zeros(nr1, numel(lags));
+corrco = zeros(1,nr1);
+for i = 1:numel(lags)
+    if i == 1358
         display('hello');
     end
     corr(:,i) = sum(acti_1.*acti_2(:,i:i+nc1-1),2)./(rms(acti_1,2).*rms(acti_2(:,i:i+nc1-1),2));
-    temp = corrcoef(acti_1, acti_2(:,i:i+nc1-1));
-    corrcoeffs(i) = temp(1,2);
+    for j = 1: nr1
+        temp = corrcoef(acti_1(j,:), acti_2(j,i:i+nc1-1));
+        corrco(j) = temp(1,2);
+    end
+    corrcoeffs(i) = mean(corrco);
     temp = pdist2(acti_1, acti_2(:,i:i+nc1-1),'cosine');
     cosine_dists(:,i) = diag(temp);
 end
+corr(:,1) = [];
+corrcoeffs(1) = [];
+cosine_dists(:,1) = [];
+lags = lags(2:end);
 
+figure;
+plot(lags,corrcoeffs);
+figure;
+plot(lags,prod(corr));
+figure;
+plot(lags, prod(cosine_dists.^-1));
 end
