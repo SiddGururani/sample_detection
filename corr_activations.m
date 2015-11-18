@@ -1,4 +1,4 @@
-function [corr, corrcoeffs, lags] = corr_activations(acti_1, acti_2)
+function [corr, lags] = corr_activations(acti_1, acti_2)
 
 % acti_1 columns should be smaller than Acti_2 columns
 [nr1, nc1] = size(acti_1);
@@ -19,19 +19,19 @@ lags = -nc1:nc2+1;
 acti_2 = [zeros(nr1, nc1), acti_2, zeros(nr1, nc1+1)];
 
 corr = zeros(nr1, numel(lags));
-corrcoeffs = zeros(1, numel(lags));
+% corrcoeffs = zeros(1, numel(lags));
 % cosine_dists = zeros(nr1, numel(lags));
-corrco = zeros(1,nr1);
+% corrco = zeros(1,nr1);
 rms_window = zeros(nr1, numel(lags));
 
 for i = 1:numel(lags)
     corr(:,i) = sum(acti_1.*acti_2(:,i:i+nc1-1),2);
     rms_window(:,i) = rms(acti_2(:,i:i+nc1-1),2);
-    for j = 1: nr1
-        temp = corrcoef(acti_1(j,:), acti_2(j,i:i+nc1-1));
-        corrco(j) = temp(1,2);
-    end
-    corrcoeffs(i) = mean(corrco);
+%     for j = 1: nr1
+%         temp = corrcoef(acti_1(j,:), acti_2(j,i:i+nc1-1));
+%         corrco(j) = temp(1,2);
+%     end
+%     corrcoeffs(i) = mean(corrco);
 %     temp = pdist2(acti_1, acti_2(:,i:i+nc1-1),'cosine');
 %     cosine_dists(:,i) = diag(temp);
 end
@@ -40,7 +40,7 @@ max_rms = max(rms_window,[],2);
 lambda_inv =  nc1 * max_rms.*rms(acti_1,2);
 corr =  bsxfun(@rdivide,corr,lambda_inv);
 corr(find(isnan(corr))) = 0;
-corrcoeffs(find(isnan(corrcoeffs))) = 0;
+% corrcoeffs(find(isnan(corrcoeffs))) = 0;
 % cosine_dists(find(isnan(cosine_dists))) = 1;
 % corr(:,1) = [];
 % corrcoeffs(1) = [];
