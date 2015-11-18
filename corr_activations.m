@@ -1,4 +1,4 @@
-function [corr, corrcoeffs, cosine_similarity] = corr_activations(acti_1, acti_2)
+function [corr, corrcoeffs, lags] = corr_activations(acti_1, acti_2)
 
 % acti_1 columns should be smaller than Acti_2 columns
 [nr1, nc1] = size(acti_1);
@@ -20,7 +20,7 @@ acti_2 = [zeros(nr1, nc1), acti_2, zeros(nr1, nc1+1)];
 
 corr = zeros(nr1, numel(lags));
 corrcoeffs = zeros(1, numel(lags));
-cosine_dists = zeros(nr1, numel(lags));
+% cosine_dists = zeros(nr1, numel(lags));
 corrco = zeros(1,nr1);
 rms_window = zeros(nr1, numel(lags));
 
@@ -32,7 +32,7 @@ for i = 1:numel(lags)
         corrco(j) = temp(1,2);
     end
     corrcoeffs(i) = mean(corrco);
-    temp = pdist2(acti_1, acti_2(:,i:i+nc1-1),'cosine');
+%     temp = pdist2(acti_1, acti_2(:,i:i+nc1-1),'cosine');
 %     cosine_dists(:,i) = diag(temp);
 end
 
@@ -48,14 +48,19 @@ corrcoeffs(find(isnan(corrcoeffs))) = 0;
 % lags = lags(2:end);
 
 %corrcoeffs = (corrcoeffs + 1)/2;
-cosine_similarity = 1-cosine_dists;
+% cosine_similarity = 1-cosine_dists;
 
-figure;
-plot(lags,corrcoeffs);
-axis([lags(1),lags(end),-1,1]);
-figure;
-plot(lags,prod(corr).^(1/nr1));
-axis([lags(1),lags(end),0,1]);
+
+%% Plots of geometric mean of correlations or correlation coefficients for different lags
+% figure;
+% plot(lags,corrcoeffs);
+% axis([lags(1),lags(end),-1,1]);
+% figure;
+% plot(lags,prod(corr).^(1/nr1));
+% axis([lags(1),lags(end),0,1]);
+
+
+%% Cosine... don't need to use
 % figure;
 % plot(lags, prod(cosine_similarity).^(1/nr1));
 %axis([lags(1),lags(end),0,0.1]);

@@ -1,7 +1,7 @@
-% Run using (for detection): Experiment_NMF('Audio/sample.aif','Audio/suspect.aif');
-% or (for no detection): Experiment_NMF('Audio/sample.aif','Audio/0a_Suspected_Plagiarism.wav');
+% Run using (for detection): Experiment_NMF('../Audio/sample.aif','../Audio/suspect.aif');
+% or (for no detection): Experiment_NMF('../Audio/sample.aif','../Audio/0a_Suspected_Plagiarism.wav');
 
-function Experiment_NMF(sample, suspect)
+function [result, locations] = Experiment_NMF(sample, suspect)
 
 
 [data_orig,fs] = audioread(sample);
@@ -66,30 +66,50 @@ k = 10;
 [corrMat, instants] = FastCorrelate(Ho_hypo, Ho);
 corrMat(corrMat<0) = 0;
 
-[corr, corrcoeffs, cosine_similarity] = corr_activations(Ho,Ho_hypo);
+[corr, corrcoeffs, lags] = corr_activations(Ho,Ho_hypo);
 
-%normalize corrMat: method 1 :- z-score normalization. Don't use. Weird.
-normcorrMat1 = mynorm(corrMat);
 
-%normalize corrMat: method 2 :- Normalize by standard deviation of sample
-%activation and whole activations of suspect. Discussed in meeting.
-normcorrMat2 = bsxfun(@rdivide,corrMat,(std(Ho_hypo,0,2).*std(Ho,0,2)));
+%% Peak picking. Currently very basic hard threshold. Add better post-processing.
 
-%normalize corrMat: method 3 :- Normalize by RMS. Discussed in e-mail.
-normcorrMat3 = bsxfun(@rdivide, corrMat, (rms(Ho_hypo,2).*rms(Ho,2)));
+prod_corr = prod(corr).^(1/k);
+[peaks, loc] = findpeaks(prod_corr);
+loc(peaks<0.5) = [];
+peaks(peaks<0.5) = [];
 
-correlation_prod1 = prod(normcorrMat1); 
-correlation_prod2 = prod(normcorrMat2); 
-correlation_prod3 = prod(normcorrMat3); 
+if numel(peaks) == 0
+    result = 0;
+    locations = 0;
+    return
+end
+    
+locations = lags(loc).*(512/44100);
+result = 1;
+return
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+%% Detection
 
-figure;
-plot(instants,correlation_prod1);
-
-figure;
-plot(instants,correlation_prod2);
-
-figure;
-plot(instants,correlation_prod3);
+% %normalize corrMat: method 1 :- z-score normalization. Don't use. Weird.
+% normcorrMat1 = mynorm(corrMat);
+% 
+% %normalize corrMat: method 2 :- Normalize by standard deviation of sample
+% %activation and whole activations of suspect. Discussed in meeting.
+% normcorrMat2 = bsxfun(@rdivide,corrMat,(std(Ho_hypo,0,2).*std(Ho,0,2)));
+% 
+% %normalize corrMat: method 3 :- Normalize by RMS. Discussed in e-mail.
+% normcorrMat3 = bsxfun(@rdivide, corrMat, (rms(Ho_hypo,2).*rms(Ho,2)));
+% 
+% correlation_prod1 = prod(normcorrMat1); 
+% correlation_prod2 = prod(normcorrMat2); 
+% correlation_prod3 = prod(normcorrMat3); 
+% 
+% figure;
+% plot(instants,correlation_prod1);
+% 
+% figure;
+% plot(instants,correlation_prod2);
+% 
+% figure;
+% plot(instants,correlation_prod3);
 
 %[strength, occurrences] = findpeaks(correlation_prod);
 
