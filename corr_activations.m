@@ -22,27 +22,41 @@ corr = zeros(nr1, numel(lags));
 corrcoeffs = zeros(1, numel(lags));
 cosine_dists = zeros(nr1, numel(lags));
 corrco = zeros(1,nr1);
+rms_window = zeros(nr1, numel(lags));
+
 for i = 1:numel(lags)
-    corr(:,i) = sum(acti_1.*acti_2(:,i:i+nc1-1),2)./(rms(acti_1,2).*rms(acti_2(:,i:i+nc1-1),2));
+    corr(:,i) = sum(acti_1.*acti_2(:,i:i+nc1-1),2);
+    rms_window(:,i) = rms(acti_2(:,i:i+nc1-1),2);
     for j = 1: nr1
         temp = corrcoef(acti_1(j,:), acti_2(j,i:i+nc1-1));
         corrco(j) = temp(1,2);
     end
     corrcoeffs(i) = mean(corrco);
     temp = pdist2(acti_1, acti_2(:,i:i+nc1-1),'cosine');
-    cosine_dists(:,i) = diag(temp);
+%     cosine_dists(:,i) = diag(temp);
 end
-corr(:,1) = [];
-corrcoeffs(1) = [];
-cosine_dists(:,1) = [];
-lags = lags(2:end);
 
+max_rms = max(rms_window,[],2);
+lambda_inv =  nc1 * max_rms.*rms(acti_1,2);
+corr =  bsxfun(@rdivide,corr,lambda_inv);
+corr(find(isnan(corr))) = 0;
+corrcoeffs(find(isnan(corrcoeffs))) = 0;
+% cosine_dists(find(isnan(cosine_dists))) = 1;
+% corr(:,1) = [];
+% corrcoeffs(1) = [];
+% cosine_dists(:,1) = [];
+% lags = lags(2:end);
+
+%corrcoeffs = (corrcoeffs + 1)/2;
 cosine_similarity = 1-cosine_dists;
 
 figure;
 plot(lags,corrcoeffs);
+axis([lags(1),lags(end),-1,1]);
 figure;
-plot(lags,prod(corr));
-figure;
-plot(lags, prod(cosine_similarity));
+plot(lags,prod(corr).^(1/nr1));
+axis([lags(1),lags(end),0,1]);
+% figure;
+% plot(lags, prod(cosine_similarity).^(1/nr1));
+%axis([lags(1),lags(end),0,0.1]);
 end
