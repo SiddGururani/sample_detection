@@ -6,28 +6,42 @@ function [result, locations] = Experiment_NMF(sample, suspect)
 
 [data_orig,fs] = audioread(sample);
 [data_copy,fs] = audioread(suspect);
-data_orig = bsxfun(@rdivide, data_orig, rms(data_orig,1));
-data_copy = bsxfun(@rdivide, data_copy, rms(data_copy,1));
+% data_orig = bsxfun(@rdivide, data_orig, rms(data_orig,1));
+% data_copy = bsxfun(@rdivide, data_copy, rms(data_copy,1));
+data_orig = downsample(data_orig,2);
+data_copy = downsample(data_copy,2);
+fs = fs/2;
 
 %% Computing the STFT spectrograms
 data_orig = mean(data_orig,2);
 data_copy = mean(data_copy,2);
 
-[Xo, freq, time] = spectrogram(data_orig, 2048, 2048-512);
-Xs = spectrogram(data_copy, 2048, 2048-512);
-f = 0:(length(freq)-1);
-f = f*((fs/2)/length(freq));
-
-midi = 69 + 12*log2(f/440);
+window = 4096;
+hop = 1024;
+Xo = spectrogram(data_orig, window, window-hop);
+Xs = spectrogram(data_copy, window, window-hop);
+% f = 0:(length(freq)-1);
+% f = f*((fs/2)/length(freq));
+% 
+% midi = 69 + 12*log2(f/440);
 
 %% Performing Non-negative Matrix Factorization on the original sample spectrogram
 
 n = 0; % no pitch shifts
-k = 10; 
+k = 6; 
 [Bo, Ho] = nnmf(abs(Xo), k);
 
-%% Computing pitch shifted templates for detecting pitch shifted samples
+% Check for low-rank < k
+rank_check = sum(Ho,2);
+if ~isempty(find(rank_check == 0))
+    Ho(find(rank_check == 0),:) = [];
+    Bo(:,find(rank_check == 0)) = [];
+    k = k - numel(find(rank_check == 0));
+end
 
+
+%% Computing pitch shifted templates for detecting pitch shifted samples
+% 
 % N = numel(Bo(:,1));
 % Bo_concat = Bo;
 % 
@@ -65,8 +79,8 @@ k = 10;
 %% Computing correlation and subsequently the occurences between activation 
 %  matrices of original sample and suspected copy
 
-[corrMat, instants] = FastCorrelate(Ho_hypo, Ho);
-corrMat(corrMat<0) = 0;
+% [corrMat, instants] = FastCorrelate(Ho_hypo, Ho);
+% corrMat(corrMat<0) = 0;
 
 [corr, lags] = corr_activations(Ho,Ho_hypo);
 
@@ -74,9 +88,12 @@ corrMat(corrMat<0) = 0;
 %% Peak picking. Currently very basic hard threshold. Add better post-processing.
 
 prod_corr = prod(corr).^(1/k);
+% peak_filter = myMedianThres(prod_corr',5,0.3);
+% peak_fn = prod_corr - peak_filter';
+% [peaks, loc] = findpeaks(peak_fn);
 [peaks, loc] = findpeaks(prod_corr);
-loc(peaks<0.5) = [];
-peaks(peaks<0.5) = [];
+loc(peaks<0.6) = [];
+peaks(peaks<0.6) = [];
 
 if numel(peaks) == 0
     result = 0;
@@ -84,7 +101,7 @@ if numel(peaks) == 0
     return
 end
     
-locations = lags(loc).*(512/fs);
+locations = lags(loc).*(hop/fs);
 result = 1;
 return
 

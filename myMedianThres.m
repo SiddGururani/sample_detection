@@ -20,4 +20,15 @@ for i = 1:numel(nvt)-1
     thres(i) = thres(i) + median(window);
 end
 
+
+% figure;
+% time_in_sec = [1:length(nvt)]*256/44100;
+% plot(time_in_sec, thres,'g','linewidth',2)
+% hold on
+% plot(time_in_sec, nvt,'r')
+% xlabel('Time (s)')
+% ylabel('Novelty')
+% title(['Output of ' mfilename ' for order=' num2str(order) ', lambda=' num2str(lambda)])
+% saveas(gcf,['../Report/Figures/' mfilename '_ord' num2str(order) '_lam' num2str(lambda) '.jpg'],'jpg')
+% saveas(gcf,['../Report/Figures/' mfilename '_ord' num2str(order) '_lam' num2str(lambda) '.fig'],'fig')
 end
