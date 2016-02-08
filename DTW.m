@@ -17,15 +17,30 @@ function [p, C] = DTW(D)
             C(n_A, n_B)                 = D(n_A,n_B) + fC_min;
         end
     end
-
-    % traceback
+    
+    
+    % traceback from minimum cost element in last row of cost matrix
     iDec= [-1 -1; -1 0; 0 -1]; % compare DeltaP contents: diag, vert, hori
-    p   = size(D);  % start with the last element
-    n   = [size(D,1), size(D,2)]; %[n_A, n_B];
+    [~,loc] = min(C(end,:));
+    p   = [size(D,1),loc];
+%     p   = size(D);  % start with the last element
+%     n   = [size(D,1), size(D,2)]; %[n_A, n_B];
+    n  = p;
     while ((n(1) > 1) || (n(2) > 1))
         n = n + iDec(DeltaP(n(1),n(2)),:);
 
         % update path (final length unknown)
         p   = [n; p];
     end   
+
+%     % traceback from last element in matrix
+%     iDec= [-1 -1; -1 0; 0 -1]; % compare DeltaP contents: diag, vert, hori
+%     p   = size(D);  % start with the last element
+%     n   = [size(D,1), size(D,2)]; %[n_A, n_B];
+%     while ((n(1) > 1) || (n(2) > 1))
+%         n = n + iDec(DeltaP(n(1),n(2)),:);
+% 
+%         % update path (final length unknown)
+%         p   = [n; p];
+%     end   
 end
