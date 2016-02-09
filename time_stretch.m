@@ -1,23 +1,4 @@
-%1 Sample kept the same. Suspect time stretched
-sample = '../Audio/sample.aif';
-sample_no = 1;
-suspect = '../Audio/time.wav';
-suspect_no = 1;
-% suspect = '../Audio/suspect.aif';
-% suspect = '../Audio/0a_Suspected_Plagiarism.wav';
-
-%2 Sample time stretched. Suspect kept the same
-% sample = 'C:/Users/SiddGururani/Desktop/Stevie wonder samples/Inorganic Dataset/New_sample/01.wav';
-% sample = 'C:/Users/SiddGururani/Desktop/Stevie wonder samples/Inorganic Dataset/Time-stretched/01.wav';
-% suspect = 'C:/Users/SiddGururani/Desktop/Stevie wonder samples/Inorganic Dataset/New_songs/01.wav';
-% suspect = 'C:/Users/SiddGururani/Desktop/Stevie wonder samples/Inorganic Dataset/New_songs/02.wav';
-
-%3 Sample time stretched. Suspect kept the same
-% sample = 'C:/Users/SiddGururani/Desktop/Stevie wonder samples/Inorganic Dataset/New_sample/02.wav';
-% sample = 'C:/Users/SiddGururani/Desktop/Stevie wonder samples/Inorganic Dataset/Time-stretched/02.wav';
-% suspect = 'C:/Users/SiddGururani/Desktop/Stevie wonder samples/Inorganic Dataset/New_songs/02.wav';
-% suspect = 'C:/Users/SiddGururani/Desktop/Stevie wonder samples/Inorganic Dataset/New_songs/01.wav';
-
+function [] = time_stretch(sample, suspect, sample_no, suspect_no)
 [data_orig,fs] = audioread(sample);
 [data_copy,fs] = audioread(suspect);
 % data_orig = bsxfun(@rdivide, data_orig, rms(data_orig,1));
@@ -100,6 +81,8 @@ tic;
 D = pdist2(Ho', Ho_hypo','correlation');
 costs = zeros(1,size(Ho_hypo,2)- floor(size(Ho,2)/4));
 locs = zeros(1,size(Ho_hypo,2) - floor(size(Ho,2)/4));
+new_costs = zeros(1,size(Ho_hypo,2) - floor(size(Ho,2)/4));
+
 % p = cell(size(Ho_hypo,2),1);
 for i=1:(size(Ho_hypo,2) - floor(size(Ho,2)/4));
 	[a,c] = DTW(D(:,i:end));
@@ -122,6 +105,7 @@ for i = 1:numel(costs)
         end
     end
 end
+
 figure; plot(costs);title(['costs for sample# ',num2str(sample_no),' and suspect# ',num2str(suspect_no)]);
 figure; plot(locs);title(['locations for sample# ',num2str(sample_no),' and suspect# ',num2str(suspect_no)]);
 figure; plot(new_costs);title(['normalized costs/length for sample# ',num2str(sample_no),' and suspect# ',num2str(suspect_no)]);
