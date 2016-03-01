@@ -33,7 +33,7 @@ function [p, C] = DTW(D)
         p   = [n; p];
     end   
 
-%     % traceback from last element in matrix
+    % traceback from last element in matrix
 %     iDec= [-1 -1; -1 0; 0 -1]; % compare DeltaP contents: diag, vert, hori
 %     p   = size(D);  % start with the last element
 %     n   = [size(D,1), size(D,2)]; %[n_A, n_B];

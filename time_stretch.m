@@ -1,4 +1,4 @@
-function [] = time_stretch(sample, suspect, sample_no, suspect_no)
+function [result, locs] = time_stretch(sample, suspect, sample_no, suspect_no)
 [data_orig,fs] = audioread(sample);
 [data_copy,fs] = audioread(suspect);
 % data_orig = bsxfun(@rdivide, data_orig, rms(data_orig,1));
@@ -77,35 +77,96 @@ for i = 1:(n+1)*k
 end
 
 %% time stretch detection
-tic;
+% tic;
 D = pdist2(Ho', Ho_hypo','correlation');
 costs = zeros(1,size(Ho_hypo,2)- floor(size(Ho,2)/4));
 locs = zeros(1,size(Ho_hypo,2) - floor(size(Ho,2)/4));
-new_costs = zeros(1,size(Ho_hypo,2) - floor(size(Ho,2)/4));
+% new_costs = zeros(1,size(Ho_hypo,2) - floor(size(Ho,2)/4));
+costs_m = zeros(1,size(Ho_hypo,2)- floor(size(Ho,2)/4));
+locs_m = zeros(1,size(Ho_hypo,2) - floor(size(Ho,2)/4));
 
 % p = cell(size(Ho_hypo,2),1);
+%MATLAB DTW call
+tic
 for i=1:(size(Ho_hypo,2) - floor(size(Ho,2)/4));
 	[a,c] = DTW(D(:,i:end));
 %     p{i} = a;
-	[costs(i), locs(i)] = min(c(end,:));
-    locs(i) = locs(i) + i;
-    costs(i) = costs(i)/size(a,1);
+	[costs_m(i), locs_m(i)] = min(c(end,:));
+    locs_m(i) = locs_m(i) + i;
+    costs_m(i) = costs_m(i)/size(a,1);
 end
 toc;
+
+%C++ DTW call
+distfile = 'C:/Users/SiddGururani/Desktop/MUSIC-8903-2016-exercise3_dtw/bin/release/distmat.bin';
+outfile = 'C:/Users/SiddGururani/Desktop/MUSIC-8903-2016-exercise3_dtw/bin/release/output.bin';
+executable = 'C:/Users/SiddGururani/Desktop/MUSIC-8903-2016-exercise3_dtw/bin/release/MUSI8903Exec.exe';
+tic
+fid = fopen(distfile, 'w');
+fwrite(fid,D,'float');
+fclose(fid);
+for i=1:(size(Ho_hypo,2) - floor(size(Ho,2)/4));
+    system([executable ' ' num2str(size(D,1)) ' ' num2str(size(D,2)) ' ' num2str(i-1) ' ' distfile ' ' outfile]);
+    fid = fopen(outfile,'r');
+    dtw_out = fread(fid, [3 1], 'float');
+    fclose(fid);
+    locs(i) = dtw_out(3) + i + 1;
+    costs(i) = dtw_out(2)/dtw_out(1);
+end
+toc;
+% For testing purposes
+% filename = ['test_', num2str(sample_no), '_', num2str(suspect_no),'.mat'];
+% save(filename,'locs', 'costs');
+% result = 1;
+% locs = 1;
+% load(filename);
 
 % code for including the step length for cost computation
 locs_diff = diff(locs);
 locs_diff = [1 locs_diff];
 steps = find(locs_diff~=0);
+steps = [steps, numel(locs)];
 length_steps = diff(steps);
+length_steps(end) = length_steps(end)+1;%to compensate for last step
 for i = 1:numel(costs)
     for j = 2:numel(steps)
-        if(i < steps(j))
+        if(i < steps(j) && i >= steps(j-1))
             new_costs(i) = costs(i)/length_steps(j-1);
         end
     end
 end
+new_costs(numel(costs)) = costs(end)/length_steps(end);
 
-figure; plot(costs);title(['costs for sample# ',num2str(sample_no),' and suspect# ',num2str(suspect_no)]);
-figure; plot(locs);title(['locations for sample# ',num2str(sample_no),' and suspect# ',num2str(suspect_no)]);
-figure; plot(new_costs);title(['normalized costs/length for sample# ',num2str(sample_no),' and suspect# ',num2str(suspect_no)]);
+% Get minimum cost within each step
+min_in_step = zeros(1, numel(steps));
+locs_in_step = zeros(1, numel(steps));
+for i = 1:numel(steps)-1
+    [min_in_step(i), locs_in_step(i)] = min(costs(steps(i):steps(i+1)));
+    locs_in_step(i) = locs_in_step(i) + steps(i);
+end
+min_in_step(end) = min(costs(steps(end):end));
+locs_in_step(end) = locs_in_step(end) + steps(end);
+
+mean_cost = mean(costs);
+stdev = std(costs);
+
+% Removing candidates whose value is greater than the mean cost
+locs_in_step((min_in_step-mean_cost)>0) = [];
+min_in_step((min_in_step-mean_cost)>0) = [];
+
+% Removing candidates whose value isn't lower than 1.5 times the standard
+% deviation of the costs.
+locs_in_step((abs(min_in_step-mean_cost)-3*stdev)<0) = [];
+min_in_step((abs(min_in_step-mean_cost)-3*stdev)<0) = [];
+
+if(isempty(locs_in_step))
+    result = 0;
+else
+    result = 1;
+end
+
+% figure; plot(costs);title(['costs for sample# ',num2str(sample_no),' and suspect# ',num2str(suspect_no)]);
+% figure; plot(locs);title(['locations for sample# ',num2str(sample_no),' and suspect# ',num2str(suspect_no)]);
+% figure; plot(new_costs);title(['normalized costs/length for sample# ',num2str(sample_no),' and suspect# ',num2str(suspect_no)]);
+locs = locs_in_step;
+end
