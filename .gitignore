@@ -45,3 +45,6 @@ Temporary Items
 *.doc
 SAX_2006_ver/SAX_2006_ver/sax_to_20.xls
 *.wav
+*.mp3
+*.mat
+*.bin

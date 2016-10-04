@@ -16,7 +16,7 @@ fs = fs/2;
 %% Computing the STFT spectrograms
 data_orig = mean(data_orig,2);
 data_copy1 = mean(data_copy1,2);
-data_copy2 = mean(data_copy2,2);
+% data_copy2 = mean(data_copy2,2);
 
 window = 4096;
 hop = 1024;
@@ -75,11 +75,11 @@ Bo_concat = Bo;
 
 % n : number of semi-tone shifts.
 n = 24; 
-% shift up
+% shift down
 for i=1:12
     t1 = 1:N;
     t2 = (t1)/(2^(-i/12));
-    B_shift = interp1(t1, Bo, t2,'spline');
+    B_shift = interp1(t1, Bo, t2,'linear');
     if t1(end)<t2(end)
         B_shift(floor(t1(end)/t2(end)*t1(end)):end,:) = 0;
     end
@@ -90,7 +90,7 @@ end
 for i=1:12
     t1 = 1:N;
     t2 = (t1)/(2^(i/12));
-    B_shift = interp1(t1, Bo, t2,'spline');
+    B_shift = interp1(t1, Bo, t2,'linear');
     if t1(end)<t2(end)
         B_shift(floor(t1(end)/t2(end)*t1(end)):end,:) = 0;
     end

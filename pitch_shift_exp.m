@@ -44,7 +44,7 @@ Bo_concat = Bo;
 
 % n : number of semi-tone shifts.
 n = 24; 
-% shift up
+% shift down
 for i=1:12
     t1 = 1:N;
     t2 = (t1)/(2^(-i/12));

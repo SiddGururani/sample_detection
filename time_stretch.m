@@ -1,4 +1,4 @@
-function [result, locs] = time_stretch(sample, suspect, sample_no, suspect_no)
+function [result, locs, costs, min_in_step] = time_stretch(sample, suspect, sample_no, suspect_no)
 [data_orig,fs] = audioread(sample);
 [data_copy,fs] = audioread(suspect);
 % data_orig = bsxfun(@rdivide, data_orig, rms(data_orig,1));
@@ -57,7 +57,7 @@ end
 
 %% Performing partially fixed NMF using the precomputed template matrix    
 
-[Bo1, Ho_hypo, ~, ~, err] = PfNmf(abs(Xs), Bo, [], [], [], 0, 0);
+[Bo1, Ho_hypo, ~, ~, err] = PfNmf(abs(Xs), Bo, [], [], [], 20, 0);
 
 
 %% Performing partially fixed NMF using the pitch-shift templates concatenated as well. 
@@ -88,14 +88,14 @@ locs_m = zeros(1,size(Ho_hypo,2) - floor(size(Ho,2)/4));
 % p = cell(size(Ho_hypo,2),1);
 %MATLAB DTW call
 tic
-for i=1:(size(Ho_hypo,2) - floor(size(Ho,2)/4));
-	[a,c] = DTW(D(:,i:end));
-%     p{i} = a;
-	[costs_m(i), locs_m(i)] = min(c(end,:));
-    locs_m(i) = locs_m(i) + i;
-    costs_m(i) = costs_m(i)/size(a,1);
-end
-toc;
+% for i=1:(size(Ho_hypo,2) - floor(size(Ho,2)/4));
+% 	[a,c] = DTW(D(:,i:end));
+% %     p{i} = a;
+% 	[costs_m(i), locs_m(i)] = min(c(end,:));
+%     locs_m(i) = locs_m(i) + i;
+%     costs_m(i) = costs_m(i)/size(a,1);
+% end
+% toc;
 
 %C++ DTW call
 distfile = 'C:/Users/SiddGururani/Desktop/MUSIC-8903-2016-exercise3_dtw/bin/release/distmat.bin';
@@ -103,15 +103,21 @@ outfile = 'C:/Users/SiddGururani/Desktop/MUSIC-8903-2016-exercise3_dtw/bin/relea
 executable = 'C:/Users/SiddGururani/Desktop/MUSIC-8903-2016-exercise3_dtw/bin/release/MUSI8903Exec.exe';
 tic
 fid = fopen(distfile, 'w');
-fwrite(fid,D,'float');
+% Row-wise writing instead of column-wise writing
+fwrite(fid,D','float');
 fclose(fid);
-for i=1:(size(Ho_hypo,2) - floor(size(Ho,2)/4));
-    system([executable ' ' num2str(size(D,1)) ' ' num2str(size(D,2)) ' ' num2str(i-1) ' ' distfile ' ' outfile]);
+for i=1:(size(Ho_hypo,2) - floor(size(Ho,2)/4))
+    system([executable ' ' num2str(size(D,1)) ' ' num2str(size(D,2)) ' ' num2str(i-1) ' ' distfile ' ' outfile ' 1>NUL 2>NUL']);
     fid = fopen(outfile,'r');
     dtw_out = fread(fid, [3 1], 'float');
     fclose(fid);
     locs(i) = dtw_out(3) + i + 1;
     costs(i) = dtw_out(2)/dtw_out(1);
+    [a,c] = DTW(D(:,i:end));
+%     p{i} = a;
+	[costs_m(i), locs_m(i)] = min(c(end,:));
+    locs_m(i) = locs_m(i) + i;
+    costs_m(i) = costs_m(i)/size(a,1);
 end
 toc;
 % For testing purposes
@@ -120,6 +126,11 @@ toc;
 % result = 1;
 % locs = 1;
 % load(filename);
+
+
+
+
+
 
 % code for including the step length for cost computation
 locs_diff = diff(locs);
