@@ -60,7 +60,7 @@ end
 N = numel(Bo(:,1));
 t1 = 1:N;
 t2 = (t1)/(2^(pitch_shift/12));
-B_shift = interp1(t1, Bo, t2,'linear');
+B_shift = interp1(t1, Bo, t2,'spline');
 if t1(end)<t2(end)
     B_shift(floor(t1(end)/t2(end)*t1(end)):end,:) = min(B_shift(B_shift>0));
 end
@@ -111,22 +111,22 @@ slope_dev = zeros(1, size(Ho_hypo,2) - floor(size(Ho,2)/4));
 % end
 
 
-% p = cell(size(Ho_hypo,2),1);
-% %MATLAB DTW call
-% tic
-% for i=1:(size(Ho_hypo,2) - floor(size(Ho,2)/4));
-%     cum_dev = 0;
-% 	[a,c] = DTW(D(:,i:end));
-% %     p{i} = a;
-%     av_slope = (a(end,2) - a(1,2))/(a(end,1) - a(1,1));
-%     cum_dev = sum(abs(a(2:end-1,2) - a(2:end-1,1)*av_slope)/sqrt(1+av_slope*av_slope)); 
-%     cum_dev = cum_dev/(size(a,1)-2);
-% 	[costs_m(i), locs_m(i)] = min(c(end,:));
-%     locs_m(i) = locs_m(i) + i;
-%     costs_m(i) = costs_m(i)/size(a,1);
-%     slope_dev(i) = cum_dev;
-% end
-% toc;
+p = cell(size(Ho_hypo,2),1);
+%MATLAB DTW call
+tic
+for i=1:(size(Ho_hypo,2) - floor(size(Ho,2)/4));
+    cum_dev = 0;
+	[a,c] = DTW(D(:,i:end));
+%     p{i} = a;
+    av_slope = (a(end,2) - a(1,2))/(a(end,1) - a(1,1));
+    cum_dev = sum(abs(a(2:end-1,2) - a(2:end-1,1)*av_slope)/sqrt(1+av_slope*av_slope)); 
+    cum_dev = cum_dev/(size(a,1)-2);
+	[costs_m(i), locs_m(i)] = min(c(end,:));
+    locs_m(i) = locs_m(i) + i;
+    costs_m(i) = costs_m(i)/size(a,1);
+    slope_dev(i) = cum_dev;
+end
+toc;
 
 %C++ DTW call
 % distfile = 'C:/Users/SiddGururani/Desktop/MUSIC-8903-2016-exercise3_dtw/bin/release/distmat.bin';

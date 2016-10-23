@@ -10,7 +10,7 @@ dists = cell(1,80);
 % locs = cell(1,80);
 % slope_dev = cell(1,80);
 tic
-for i = 2:80
+for i = 1:80
    if(annotation(i,2) < 10)
        filenum2 = ['0',num2str(annotation(i,2))];
    else
