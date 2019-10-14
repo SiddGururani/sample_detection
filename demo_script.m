@@ -5,6 +5,15 @@ suspect2 = 'C:/Users/SiddGururani/Desktop/Stevie wonder samples/Inorganic Datase
 [data_orig,fs] = audioread(sample);
 [data_copy1,fs] = audioread(suspect1);
 [data_copy2,fs] = audioread(suspect2);
+
+data_orig = mean(data_orig,2);
+data_copy1 = mean(data_copy1,2);
+data_copy2 = mean(data_copy2,2);
+
+data_orig = data_orig/rms(data_orig);
+data_copy1 = data_copy1/rms(data_copy1);
+data_copy2 = data_copy2/rms(data_copy2);
+
 % data_orig = bsxfun(@rdivide, data_orig, rms(data_orig,1));
 % data_copy = bsxfun(@rdivide, data_copy, rms(data_copy,1));
 data_orig = downsample(data_orig,2);
@@ -14,9 +23,7 @@ data_copy2 = downsample(data_copy2,2);
 fs = fs/2;
 
 %% Computing the STFT spectrograms
-data_orig = mean(data_orig,2);
-data_copy1 = mean(data_copy1,2);
-data_copy2 = mean(data_copy2,2);
+
 
 window = 4096;
 hop = 1024;
@@ -86,12 +93,10 @@ pause;
 
 %% Performing partially fixed NMF using the precomputed template matrix    
 
-[Bo1, Ho_hypo1, ~, ~, err] = PfNmf(abs(Xs1), Bo, [], [], [], 0, 0);
-[Bo1, Ho_hypo2, ~, ~, err] = PfNmf(abs(Xs2), Bo, [], [], [], 0, 0);
+[Bo1, Ho_hypo1, ~, ~, err] = PfNmf(abs(Xs1), Bo, [], [], [], 10, 0);
+[Bo1, Ho_hypo2, ~, ~, err] = PfNmf(abs(Xs2), Bo, [], [], [], 10, 0);
 figure; imagesc([1:size(Ho_hypo1,2)].*hop/fs,[0:2048],(Bo*Ho_hypo1)); xlabel('Time (s)'); ylabel('Frequency Bin'); title('Reconstructed Spectrogram of Sample using Song Activations: Match');
 figure; imagesc([1:size(Ho_hypo2,2)].*hop/fs,[0:2048],(Bo*Ho_hypo2)); xlabel('Time (s)'); ylabel('Frequency Bin'); title('Reconstructed Spectrogram of Sample using Song Activations: No Match');
-fprintf('Press a key to continue...\n');
-pause;
 
 %% Performing partially fixed NMF using the pitch-shift templates concatenated as well. 
 %  use either one of the PFNMF sections
@@ -116,11 +121,14 @@ pause;
 % corrMat(corrMat<0) = 0;
 
 [corr1, lags1] = corr_activations(Ho,Ho_hypo1);
+corr1(:,lags1 < 0) = [];
+lags1(lags1 < 0) = [];       
 figure; plot(lags1*1024/22050,corr1); xlabel('Time (s)'); ylabel('Correlation'); title('6 Correlation Functions Between Corresponding Activations: Match');
 
 [corr2, lags2] = corr_activations(Ho,Ho_hypo2);
 figure; plot(lags2*1024/22050,corr2); xlabel('Time (s)'); ylabel('Correlation'); title('6 Correlation Functions Between Corresponding Activations: No Match');
-
+corr2(:,lags2 < 0) = [];
+lags2(lags2 < 0) = [];
 fprintf('Press a key to continue...\n');
 pause;
 %% Peak picking. Currently very basic hard threshold. Add better post-processing.

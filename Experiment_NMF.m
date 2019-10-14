@@ -16,6 +16,9 @@ fs = fs/2;
 data_orig = mean(data_orig,2);
 data_copy = mean(data_copy,2);
 
+data_orig = data_orig/rms(data_orig);
+data_copy = data_copy/rms(data_copy);
+
 window = 4096;
 hop = 1024;
 Xo = spectrogram(data_orig, window, window-hop);
@@ -68,13 +71,13 @@ end
 %% Normalize the two activation matrices before computing correlation
 % DO NOT RUN
 
-% for i = 1:k
-%     Ho(i,:) = Ho(i,:)/norm(Ho(i,:),1);
-% end
-% 
-% for i = 1:(n+1)*k
-%     Ho_hypo(i,:) = Ho_hypo(i,:)/norm(Ho_hypo(i,:),1);
-% end
+for i = 1:k
+    Ho(i,:) = Ho(i,:)/norm(Ho(i,:),1);
+end
+
+for i = 1:(n+1)*k
+    Ho_hypo(i,:) = Ho_hypo(i,:)/norm(Ho_hypo(i,:),1);
+end
 
 %% Computing correlation and subsequently the occurences between activation 
 %  matrices of original sample and suspected copy

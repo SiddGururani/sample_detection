@@ -48,3 +48,5 @@ SAX_2006_ver/SAX_2006_ver/sax_to_20.xls
 *.mp3
 *.mat
 *.bin
+*.exe
+*.arff
